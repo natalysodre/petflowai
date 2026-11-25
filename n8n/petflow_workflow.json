@@ -1,0 +1,767 @@
+{
+  "name": "PetFlow AI - Encaminhamento de atendimentos",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "petflow/encaminhar",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "04dcf344-13c2-4a07-b9f8-947d8fd9455b",
+      "name": "Webhook - Atendimento classificado",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "01a11d3e-8501-4ee5-8387-d728d5db0606"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b8593d22-c4a6-48dd-b23b-d07e9f6995e4",
+              "name": "id",
+              "value": "={{ $json.body.id }}",
+              "type": "string"
+            },
+            {
+              "id": "90a62e15-15e8-43c1-b2b5-e22a8070be2f",
+              "name": "remetente",
+              "value": "={{ $json.body.remetente }}",
+              "type": "string"
+            },
+            {
+              "id": "c308f552-afef-4618-87e4-b41d2ea4f0cd",
+              "name": "canal",
+              "value": "={{ $json.body.canal }}",
+              "type": "string"
+            },
+            {
+              "id": "27a121b5-ccdd-4925-ba04-ad58147a02aa",
+              "name": "mensagem_original",
+              "value": "={{ $json.body.mensagem_original }}",
+              "type": "string"
+            },
+            {
+              "id": "e68f474a-aeb2-4f46-9b71-39e90f9324b6",
+              "name": "classificacao",
+              "value": "={{ $json.body.classificacao }}",
+              "type": "object"
+            },
+            {
+              "id": "e04e8a7f-bdcc-4b6f-ae99-488a3b90a23d",
+              "name": "encaminhamento",
+              "value": "={{ $json.body.encaminhamento }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3ff2340e-b615-4662-a4d6-bfba3951e2b8",
+      "name": "Dados da API",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fb7b5485-e544-46c0-9d83-27de5e46a511",
+              "leftValue": "={{ $json.encaminhamento.alerta_veterinario }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "12287c76-b433-4ff5-9182-a5861bd73291",
+      "name": "É urgente?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c27a8b75-fe7f-4d0b-8e35-aaf31e527cb0",
+              "name": "alerta",
+              "value": "={{ '🚨 ' + $json.encaminhamento.prioridade + ' | ' + $json.classificacao.resumo }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "c37f91c7-5bab-4ee0-8d76-522db11457a2",
+      "name": "Alerta: equipe veterinária",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.encaminhamento.fila }}",
+                    "rightValue": "recepcao",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "f0aef09f-6a14-4af7-8e85-844576e0c7ac"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Recepção"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.encaminhamento.fila }}",
+                    "rightValue": "equipe_veterinaria",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "03e74e21-ff9e-46a6-817f-104ea73c64fb"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Equipe veterinária"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.encaminhamento.fila }}",
+                    "rightValue": "atendimento",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "164c94a9-d332-4ad4-88b3-2b380090773c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Atendimento"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.encaminhamento.fila }}",
+                    "rightValue": "recepcao_veterinaria",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "845bcc4b-e776-4367-b73a-3b8f04e8221c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Recepção / Equipe veterinária"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.encaminhamento.fila }}",
+                    "rightValue": "gerencia",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "9084b6cd-22a6-4a1b-8e67-d77a2ebef83a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Gerência"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.encaminhamento.fila }}",
+                    "rightValue": "administrativo",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c6a5c426-300c-4ad1-b4a1-29480c4a5698"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Administrativo"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Revisão manual"
+        }
+      },
+      "id": "2d3c1251-6d76-491b-9619-a6ec573d211c",
+      "name": "Rotear por setor",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "be4d025d-fd2f-4858-a2f6-22610d825529",
+              "name": "fila_destino",
+              "value": "recepcao",
+              "type": "string"
+            },
+            {
+              "id": "9620196a-9f90-44e2-8a0d-bfa2595d406c",
+              "name": "ticket",
+              "value": "={{ '[' + $json.encaminhamento.prioridade + '] ' + $json.classificacao.categoria + ' → Recepção: ' + $json.classificacao.resumo }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "1c13fe80-1ced-449d-978a-aafd09182749",
+      "name": "Fila: Recepção",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1140,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1e74d03a-a8a6-4679-8d11-250e6ee147bb",
+              "name": "fila_destino",
+              "value": "equipe_veterinaria",
+              "type": "string"
+            },
+            {
+              "id": "4f692e6e-2d6f-4e9b-8ae6-b0573c247279",
+              "name": "ticket",
+              "value": "={{ '[' + $json.encaminhamento.prioridade + '] ' + $json.classificacao.categoria + ' → Equipe veterinária: ' + $json.classificacao.resumo }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "a8119bb6-6d51-493f-af9e-0433f459db93",
+      "name": "Fila: Equipe veterinária",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1140,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fa9f4899-0a37-47f5-8158-750ae24787d6",
+              "name": "fila_destino",
+              "value": "atendimento",
+              "type": "string"
+            },
+            {
+              "id": "f03e9343-d054-4fe6-8be8-f6995a780836",
+              "name": "ticket",
+              "value": "={{ '[' + $json.encaminhamento.prioridade + '] ' + $json.classificacao.categoria + ' → Atendimento: ' + $json.classificacao.resumo }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "b5bb7df8-6d2a-4ec5-af84-2aafa15bfe50",
+      "name": "Fila: Atendimento",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1140,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d025e68f-9be4-4a3e-bc56-ae9312a4729f",
+              "name": "fila_destino",
+              "value": "recepcao_veterinaria",
+              "type": "string"
+            },
+            {
+              "id": "e689ddef-7ad8-4650-b791-43fa06b31d83",
+              "name": "ticket",
+              "value": "={{ '[' + $json.encaminhamento.prioridade + '] ' + $json.classificacao.categoria + ' → Recepção / Equipe veterinária: ' + $json.classificacao.resumo }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "e2e11266-0bc3-4c92-b804-526ea0f309e1",
+      "name": "Fila: Recepção / Equipe veterinária",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1140,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "542c7eac-b9b0-4eca-9c91-1cc5d91b440d",
+              "name": "fila_destino",
+              "value": "gerencia",
+              "type": "string"
+            },
+            {
+              "id": "e472de3e-aa8a-4446-93e7-6adf1216bc2c",
+              "name": "ticket",
+              "value": "={{ '[' + $json.encaminhamento.prioridade + '] ' + $json.classificacao.categoria + ' → Gerência: ' + $json.classificacao.resumo }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "00c8c06e-298d-4d42-aa87-8eeb3a486cf0",
+      "name": "Fila: Gerência",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1140,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8fc79417-b4cc-4045-b801-a5ea75453c9c",
+              "name": "fila_destino",
+              "value": "administrativo",
+              "type": "string"
+            },
+            {
+              "id": "e7e81670-0739-4c09-8922-fb0af1cfbbaf",
+              "name": "ticket",
+              "value": "={{ '[' + $json.encaminhamento.prioridade + '] ' + $json.classificacao.categoria + ' → Administrativo: ' + $json.classificacao.resumo }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "ac661673-bf5d-44ca-80ad-9efeeccf68b4",
+      "name": "Fila: Administrativo",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1140,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1aeac22e-d172-438a-8f4d-ffec4d310f50",
+              "name": "fila_destino",
+              "value": "revisao_manual",
+              "type": "string"
+            },
+            {
+              "id": "cdfb1baf-2026-4b00-a596-5c5fdb8db36a",
+              "name": "ticket",
+              "value": "={{ '[' + $json.encaminhamento.prioridade + '] ' + $json.classificacao.categoria + ' → Revisão manual: ' + $json.classificacao.resumo }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "9766a3b9-0a4b-493b-b071-79c5830e0d57",
+      "name": "Fila: Revisão manual",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1140,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2a15db18-cb6a-489a-bc55-48ac7121cb68",
+              "name": "status",
+              "value": "encaminhado",
+              "type": "string"
+            },
+            {
+              "id": "ba07fffa-d298-4af5-801e-8250d20befc9",
+              "name": "registrado_em",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "0545fb9b-6c7f-42b6-95df-0871eaadb6c7",
+      "name": "Registrar atendimento",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: $json.status, fila_destino: $json.fila_destino, ticket: $json.ticket, alerta: $json.alerta || null, registrado_em: $json.registrado_em }) }}",
+        "options": {}
+      },
+      "id": "781d81d9-a4c8-44be-bba7-de8acae72c4a",
+      "name": "Responder à API",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1620,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## PetFlow AI\nInterface Next.js → API FastAPI (Gemini classifica) → **este fluxo** (alerta de urgência + roteamento por setor) → resposta com o ticket.\n\nTroque os nós **Fila: ...** por Gmail, Telegram, Discord ou Google Sheets para entregar de verdade a cada setor.",
+        "height": 220,
+        "width": 440
+      },
+      "id": "3b6d2545-b0cd-4590-861f-44008a963f97",
+      "name": "Sobre o fluxo",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Atendimento classificado": {
+      "main": [
+        [
+          {
+            "node": "Dados da API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados da API": {
+      "main": [
+        [
+          {
+            "node": "É urgente?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É urgente?": {
+      "main": [
+        [
+          {
+            "node": "Alerta: equipe veterinária",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rotear por setor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alerta: equipe veterinária": {
+      "main": [
+        [
+          {
+            "node": "Rotear por setor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rotear por setor": {
+      "main": [
+        [
+          {
+            "node": "Fila: Recepção",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fila: Equipe veterinária",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fila: Atendimento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fila: Recepção / Equipe veterinária",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fila: Gerência",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fila: Administrativo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fila: Revisão manual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fila: Recepção": {
+      "main": [
+        [
+          {
+            "node": "Registrar atendimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fila: Equipe veterinária": {
+      "main": [
+        [
+          {
+            "node": "Registrar atendimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fila: Atendimento": {
+      "main": [
+        [
+          {
+            "node": "Registrar atendimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fila: Recepção / Equipe veterinária": {
+      "main": [
+        [
+          {
+            "node": "Registrar atendimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fila: Gerência": {
+      "main": [
+        [
+          {
+            "node": "Registrar atendimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fila: Administrativo": {
+      "main": [
+        [
+          {
+            "node": "Registrar atendimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fila: Revisão manual": {
+      "main": [
+        [
+          {
+            "node": "Registrar atendimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar atendimento": {
+      "main": [
+        [
+          {
+            "node": "Responder à API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

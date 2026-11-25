@@ -260,6 +260,8 @@ petflowai/
 ├── schemas.py             # Modelos Pydantic (entrada, saída da IA, resposta)
 ├── roteamento.py          # Setor, prioridade, regra de segurança, modo simulado
 ├── automacao.py           # Envia o atendimento classificado para o n8n
+├── n8n/
+│   └── petflow_workflow.json   # Fluxo do n8n, pronto para importar
 ├── frontend/              # Interface em Next.js
 │   ├── app/page.js             # Página de envio
 │   └── app/api/mensagem/route.js  # Repassa a mensagem para a API
@@ -281,6 +283,9 @@ São três serviços, cada um em um terminal. A ordem recomendada é **n8n → A
 ### 6.1 n8n (porta 5678)
 
 1. Acesse http://localhost:5678 e crie a conta local.
+2. Importe o fluxo: clique em **Create Workflow**, depois em **⋯ → Import from File**, escolha `n8n/petflow_workflow.json` e clique em **Save**. Arrastar o arquivo para a tela vazia também funciona.
+
+O arquivo `petflow_workflow.json` contém todos os nós descritos na seção 5.3: o webhook `petflow/encaminhar`, a extração dos dados, o teste de urgência, o Switch com as 6 filas e a "Revisão manual", o registro do atendimento e a resposta para a API. Depois de importar, não é preciso configurar nada.
 
 > **Modo teste:** sem ativar o fluxo, use `/webhook-test/` no `.env` da API e clique em **Execute workflow** antes de cada envio.
 
